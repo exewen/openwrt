@@ -12,12 +12,8 @@ on:
   workflow_dispatch:
     inputs:
       device:
-        description: 'select device to build'
+        description: '请选择构建设备'
         default: 'r2s'
-        required: false
-      branch:
-        description: 'seleclt openwrt branch'
-        default: 'master'
         required: false
   #schedule:
   #  - cron: 0 20 * * *
