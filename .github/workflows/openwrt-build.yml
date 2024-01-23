@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       device:
-        description: '请选择构建设备'
+        description: '请选择构建设备-'
         default: 'r2s'
         required: false
   #schedule:
