@@ -59,8 +59,9 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
-      - name: 生成默认配置文件
-        run: make defconfig
+      - name: 读取/生成默认 配置文件
+        run: cat .config
+        #run: make defconfig
 
       - name: 下载DL库
         run: make download -j16
