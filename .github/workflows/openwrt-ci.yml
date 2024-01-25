@@ -51,7 +51,7 @@ jobs:
           sudo -E pip install pyelftools
 
       - name: 检出代码仓库到工作流环境
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: 更新 feeds
         run: |
@@ -78,7 +78,9 @@ jobs:
           df -h
           echo "======================="
           du -h --max-depth=1 ./ --exclude=build_dir --exclude=bin
+          echo "======================="
           du -h --max-depth=1 ./build_dir
+          echo "======================="
           du -h --max-depth=1 ./bin
 
       - name: 准备上传文件
@@ -91,19 +93,19 @@ jobs:
           cp -rf .config ./artifact/buildinfo/
 
       - name: 上传 buildinfo
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: OpenWrt_buildinfo
           path: ./artifact/buildinfo/
 
       - name: 上传 package
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: OpenWrt_package
           path: ./artifact/package/
 
       - name: 上传 firmware
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: OpenWrt_firmware
           path: ./bin/targets/
