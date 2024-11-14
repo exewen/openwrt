@@ -55,8 +55,8 @@ jobs:
 
       - name: feeds软件源更新
         run: |
-          echo "新增feeds软件源"
-          echo "src-git Openclash https://github.com/vernesong/OpenClash" >> ./feeds.conf.default
+          echo -e "新增feeds软件源"
+          echo -e "src-git Openclash https://github.com/vernesong/OpenClash" >> ./feeds.conf.default
           ./scripts/feeds update -a
       
       - name: feeds软件源安装
@@ -65,9 +65,14 @@ jobs:
 
       - name: 读取/生成默认 配置文件
         run: |
-          echo "复制配置文件：.${{ github.event.inputs.device }}.config"
+          echo -e "IP地址 -> 10.0.2.1"
+          sed -i '150s/ipad=${ipaddr:-"192.168.1.1"}/ipad=${ipaddr:-"10.0.2.1"}/' package/base-files/files/bin/config_generate
+          sed -i '151s/ipad=${ipaddr:-"192.168.$((addr_offset++)).1"}/ipad=${ipaddr:-"10.0.$((addr_offset++)).1"}/' package/base-files/files/bin/config_generate
+          echo -e "WAN -> pppoe"
+          sed -i '86s/${2:-dhcp}/${2:-pppoe}/' package/base-files/files/lib/functions/uci-defaults.sh
+          echo -e "Config -> 复制配置文件：.${{ github.event.inputs.device }}.config"
           cp -f "${{ github.event.inputs.device }}.config" .config
-          cat .config
+        #  cat .config
         #run: make defconfig
 
       - name: 下载DL库
@@ -75,19 +80,19 @@ jobs:
 
       - name: 编译固件
         run: |
-          echo "$(nproc) thread build."
-          echo "======================="
+          echo -e "$(nproc) thread build."
+          echo -e "======================="
           make -j$(($(nproc) + 1)) V=s
           #make -j$(nproc) || make -j1 V=s
-          echo "======================="
-          echo "Space usage:"
-          echo "======================="
+          echo -e "======================="
+          echo -e "Space usage:"
+          echo -e "======================="
           df -h
-          echo "======================="
+          echo -e "======================="
           du -h --max-depth=1 ./ --exclude=build_dir --exclude=bin
-          echo "======================="
+          echo -e "======================="
           du -h --max-depth=1 ./build_dir
-          echo "======================="
+          echo -e "======================="
           du -h --max-depth=1 ./bin
 
       - name: 准备上传文件
