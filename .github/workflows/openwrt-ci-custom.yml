@@ -58,7 +58,7 @@ jobs:
           echo -e "新增feeds软件源"
           echo -e "src-git Openclash https://github.com/vernesong/OpenClash" >> ./feeds.conf.default
           ./scripts/feeds update -a
-      
+
       - name: feeds软件源安装
         run: |
           ./scripts/feeds install -a
