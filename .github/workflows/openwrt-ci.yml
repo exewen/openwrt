@@ -53,10 +53,14 @@ jobs:
       - name: 检出代码仓库到工作流环境
         uses: actions/checkout@v4
 
-      - name: 更新 feeds
+      - name: feeds软件源更新
         run: |
-          sed -i 's/#src-git helloworld/src-git helloworld/g' ./feeds.conf.default
+          echo "新增feeds软件源"
+          echo "src-git Openclash https://github.com/vernesong/OpenClash" >> ./feeds.conf.default
           ./scripts/feeds update -a
+      
+      - name: feeds软件源安装
+        run: |
           ./scripts/feeds install -a
 
       - name: 读取/生成默认 配置文件
@@ -71,7 +75,10 @@ jobs:
 
       - name: 编译固件
         run: |
-          make -j$(nproc) || make -j1 V=s
+          echo "$(nproc) thread build."
+          echo "======================="
+          make -j$(($(nproc) + 1)) V=s
+          #make -j$(nproc) || make -j1 V=s
           echo "======================="
           echo "Space usage:"
           echo "======================="
