@@ -8,9 +8,18 @@
 name: OpenWrt-CI
 
 on:
-  schedule:
-    - cron: 0 20 * * *
-
+  repository_dispatch:
+  workflow_dispatch:
+    inputs:
+      device:
+        description: '请选择构建设备'
+        default: 'r2s'
+        required: false
+  #schedule:
+  #  - cron: 0 20 * * *
+  #push:
+  #  branches:
+  #    - master
 permissions:
   contents: read
 
@@ -18,12 +27,12 @@ jobs:
 
   build_openwrt:
 
-    name: Build OpenWrt Firmware
+    name: 构建OpenWrt镜像：${{ github.event.inputs.device }}
 
     runs-on: ubuntu-latest
 
     steps:
-      - name: Space cleanup and Initialization environment
+      - name: 空间清理和环境初始化
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
@@ -38,56 +47,77 @@ jobs:
           sudo -E apt -y autoremove --purge
           sudo -E apt clean
           sudo -E timedatectl set-timezone "Asia/Shanghai"
+          sudo -E apt -y install python3-dev python3-pip
+          sudo -E pip install pyelftools
 
-      - name: Checkout OpenWrt
-        uses: actions/checkout@v3
+      - name: 检出代码仓库到工作流环境
+        uses: actions/checkout@v4
 
-      - name: Update feeds
+      - name: feeds软件源更新
         run: |
-          sed -i 's/#src-git helloworld/src-git helloworld/g' ./feeds.conf.default
+          echo -e "新增feeds软件源"
+          echo -e "src-git Openclash https://github.com/vernesong/OpenClash" >> ./feeds.conf.default
           ./scripts/feeds update -a
+      
+      - name: feeds软件源安装
+        run: |
           ./scripts/feeds install -a
 
-      - name: Generate configuration file
-        run: make defconfig
+      - name: 读取/生成默认 配置文件
+        run: |
+          echo -e "IP地址 -> 10.0.2.1"
+          sed -i '150s/ipad=${ipaddr:-"192.168.1.1"}/ipad=${ipaddr:-"10.0.2.1"}/' package/base-files/files/bin/config_generate
+          sed -i '151s/ipad=${ipaddr:-"192.168.$((addr_offset++)).1"}/ipad=${ipaddr:-"10.0.$((addr_offset++)).1"}/' package/base-files/files/bin/config_generate
+          echo -e "WAN -> pppoe"
+          sed -i '86s/${2:-dhcp}/${2:-pppoe}/' package/base-files/files/lib/functions/uci-defaults.sh
+          echo -e "Config -> 复制配置文件：.${{ github.event.inputs.device }}.config"
+          cp -f "${{ github.event.inputs.device }}.config" .config
+        #  cat .config
+        #run: make defconfig
 
-      - name: Download packages
+      - name: 下载DL库
         run: make download -j16
 
-      - name: Compile firmware
+      - name: 编译固件
         run: |
-          make -j$(nproc) || make -j1 V=s
-          echo "======================="
-          echo "Space usage:"
-          echo "======================="
+          echo -e "$(nproc) thread build."
+          echo -e "======================="
+          make -j$(($(nproc) + 1)) V=s
+          #make -j$(nproc) || make -j1 V=s
+          echo -e "======================="
+          echo -e "Space usage:"
+          echo -e "======================="
           df -h
-          echo "======================="
+          echo -e "======================="
           du -h --max-depth=1 ./ --exclude=build_dir --exclude=bin
+          echo -e "======================="
           du -h --max-depth=1 ./build_dir
+          echo -e "======================="
           du -h --max-depth=1 ./bin
 
-      - name: Prepare artifact
+      - name: 准备上传文件
         run: |
           mkdir -p ./artifact/package
           mkdir -p ./artifact/buildinfo
           rm -rf $(find ./bin/targets/ -type d -name "packages")
           cp -rf $(find ./bin/packages/ -type f -name "*.ipk") ./artifact/package/
           cp -rf $(find ./bin/targets/ -type f -name "*.buildinfo" -o -name "*.manifest") ./artifact/buildinfo/
+          cp -rf .config ./artifact/buildinfo/
 
-      - name: Upload buildinfo
-        uses: actions/upload-artifact@v3
+      - name: 上传 buildinfo
+        uses: actions/upload-artifact@v4
         with:
           name: OpenWrt_buildinfo
           path: ./artifact/buildinfo/
 
-      - name: Upload package
-        uses: actions/upload-artifact@v3
+      - name: 上传 package
+        uses: actions/upload-artifact@v4
         with:
           name: OpenWrt_package
           path: ./artifact/package/
 
-      - name: Upload firmware
-        uses: actions/upload-artifact@v3
+      - name: 上传 firmware
+        uses: actions/upload-artifact@v4
         with:
           name: OpenWrt_firmware
           path: ./bin/targets/
