@@ -3,15 +3,21 @@
 echo "进入openwrt项目"
 cd ~/openwrt/ || exit
 
+echo "自定义配置"
+echo "地址 -> 10.0.2.1"
+sed -i '150s/ipad=${ipaddr:-"192.168.1.1"}/ipad=${ipaddr:-"10.0.2.1"}/' package/base-files/files/bin/config_generate
+sed -i '151s/ipad=${ipaddr:-"192.168.$((addr_offset++)).1"}/ipad=${ipaddr:-"10.0.$((addr_offset++)).1"}/' package/base-files/files/bin/config_generate
+echo "ucidef_set_interface_wan() -> pppoe"
+sed -i '86s/${2:-dhcp}/${2:-pppoe}/' package/base-files/files/lib/functions/uci-defaults.sh
 
 echo "机型配置"
 echo "Target System (x86) -> Rockchip"
 echo "Target Profile (Generic x86/64) -> FreindlyARM NanoPi R2S"
 echo "镜像分区配置 不动"
-echo "Target Images -> (16) Kernel partition size (in MB) -> 32"
+echo "Target Images -> (16) Kernel partition size (in MB) -> 32 64"
 echo "Target Images -> squashfs (NEW) -> 取消"
 echo "Target Images -> GZip images (NEW) -> 取消"
-echo "Target Images -> (160) Root filesystem partition size (in MiB) -> 1024"
+echo "Target Images -> (160) Root filesystem partition size (in MiB) -> 512"
 echo "插件配置"
 echo "LuCI -> Applications"
 echo "默认"
