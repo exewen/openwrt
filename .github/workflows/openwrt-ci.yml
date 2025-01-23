@@ -8,8 +8,18 @@
 name: OpenWrt-CI
 
 on:
-  schedule:
-    - cron: 0 20 * * *
+  repository_dispatch:
+  workflow_dispatch:
+    inputs:
+      device:
+        description: '请选择构建设备'
+        default: 'r2s'
+        required: false
+  #schedule:
+  #  - cron: 0 20 * * *
+  #push:
+  #  branches:
+  #    - master
 
 permissions:
   contents: read
